@@ -15,9 +15,9 @@
     <artifactId>spring-boot-operation-mongodb-starter</artifactId>
     <version>3.0.0</version>
 
-    <name>Dynamic search</name>
-    <description>Library for dynamic searching into the databases</description>
-    <url>https://github.com/serezakorotaev/spring-boot-operation-starter</url>
+    <name>NoSql Dynamic search</name>
+    <description>Library for dynamic searching into the NoSql databases</description>
+    <url>https://github.com/serezakorotaev/spring-boot-operation-mongodb-starter</url>
 
     <developers>
         <developer>
@@ -35,9 +35,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/serezakorotaev/spring-boot-operation-starter.git</connection>
-        <url>https://github.com/serezakorotaev/spring-boot-operation-starter</url>
-        <developerConnection>scm:git:https://github.com/serezakorotaev/spring-boot-operation-starter.git</developerConnection>
+        <connection>scm:git:https://github.com/serezakorotaev/spring-boot-operation-mongodb-starter.git</connection>
+        <url>https://github.com/serezakorotaev/spring-boot-operation-mongodb-starter</url>
+        <developerConnection>scm:git:https://github.com/serezakorotaev/spring-boot-operation-mongodb-starter.git</developerConnection>
     </scm>
 
     <distributionManagement>
@@ -74,17 +74,9 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
         </dependency>
     </dependencies>
 
