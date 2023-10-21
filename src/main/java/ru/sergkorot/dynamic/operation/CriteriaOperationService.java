@@ -1,6 +1,5 @@
 package ru.sergkorot.dynamic.operation;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
@@ -12,6 +11,8 @@ import ru.sergkorot.dynamic.model.enums.GlueOperation;
 import ru.sergkorot.dynamic.util.SortUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -20,11 +21,27 @@ import java.util.stream.Collectors;
  * @see OperationService
  */
 @Service
-@RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class CriteriaOperationService implements OperationService<Criteria> {
 
     private final OperationProvider<Criteria> operationProvider;
+    private final Map<String, ManualOperationProvider<Criteria>> manualOperationProviderMap;
+
+    /**
+     * Constructor which contains operation provider bean and list with manualOperationProviders (user's implementations)
+     *
+     * @param operationProvider        - interface for providing a different operations
+     * @param manualOperationProviders - Interface for user's implementations with custom operations for requests into database
+     * @see OperationProvider
+     * @see ManualOperationProvider
+     */
+    public CriteriaOperationService(OperationProvider<Criteria> operationProvider,
+                                    List<ManualOperationProvider<Criteria>> manualOperationProviders) {
+        this.operationProvider = operationProvider;
+        this.manualOperationProviderMap = CollectionUtils.isEmpty(manualOperationProviders)
+                ? null
+                : manualOperationProviders.stream().collect(Collectors.toMap(ManualOperationProvider::fieldName, Function.identity()));
+    }
 
     @Override
     public Criteria buildBaseByParams(List<BaseSearchParam> baseSearchParams, GlueOperation glue) {
@@ -34,7 +51,7 @@ public class CriteriaOperationService implements OperationService<Criteria> {
 
         List<Criteria> criteriaList = baseSearchParams
                 .stream()
-                .map(param -> buildOperation(param, operationProvider))
+                .map(this::constructCriteria)
                 .collect(Collectors.toList());
 
         return glue.glueCriteriaOperation(criteriaList);
@@ -58,13 +75,20 @@ public class CriteriaOperationService implements OperationService<Criteria> {
      * @param query            - query for mongodb request
      * @param pageAttribute    - attribute class for pagination and sorting
      * @param searchSortFields - fields by which sorting is possible in the database
-     * @see PageAttribute
      * @return Query
+     * @see PageAttribute
      */
     public Query buildPageSettings(Query query, PageAttribute pageAttribute, List<String> searchSortFields) {
         return query
                 .limit(pageAttribute.getLimit())
                 .skip(pageAttribute.getOffset())
                 .with(SortUtils.makeSort(searchSortFields, pageAttribute.getSortBy()));
+    }
+
+    private Criteria constructCriteria(BaseSearchParam param) {
+        if (!CollectionUtils.isEmpty(manualOperationProviderMap) && manualOperationProviderMap.containsKey(param.getName())) {
+            return manualOperationProviderMap.get(param.getName()).buildOperation(param);
+        }
+        return buildOperation(param, operationProvider);
     }
 }
