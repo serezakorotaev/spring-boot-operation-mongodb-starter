@@ -8,6 +8,7 @@ import ru.sergkorot.dynamic.model.BaseSearchParam;
 import ru.sergkorot.dynamic.model.ComplexSearchParam;
 import ru.sergkorot.dynamic.model.PageAttribute;
 import ru.sergkorot.dynamic.model.enums.GlueOperation;
+import ru.sergkorot.dynamic.glue.GlueOperationProvider;
 import ru.sergkorot.dynamic.util.SortUtils;
 
 import java.util.List;
@@ -25,19 +26,23 @@ import java.util.stream.Collectors;
 public class CriteriaOperationService implements OperationService<Criteria> {
 
     private final OperationProvider<Criteria> operationProvider;
+    private final GlueOperationProvider<Criteria> glueOperationProvider;
     private final Map<String, ManualOperationProvider<Criteria>> manualOperationProviderMap;
 
     /**
      * Constructor which contains operation provider bean and list with manualOperationProviders (user's implementations)
      *
      * @param operationProvider        - interface for providing a different operations
+     * @param glueOperationProvider - define glue option
      * @param manualOperationProviders - Interface for user's implementations with custom operations for requests into database
      * @see OperationProvider
      * @see ManualOperationProvider
      */
     public CriteriaOperationService(OperationProvider<Criteria> operationProvider,
+                                    GlueOperationProvider<Criteria> glueOperationProvider,
                                     List<ManualOperationProvider<Criteria>> manualOperationProviders) {
         this.operationProvider = operationProvider;
+        this.glueOperationProvider = glueOperationProvider;
         this.manualOperationProviderMap = CollectionUtils.isEmpty(manualOperationProviders)
                 ? null
                 : manualOperationProviders.stream().collect(Collectors.toMap(ManualOperationProvider::fieldName, Function.identity()));
@@ -54,7 +59,7 @@ public class CriteriaOperationService implements OperationService<Criteria> {
                 .map(this::constructCriteria)
                 .collect(Collectors.toList());
 
-        return glue.glueCriteriaOperation(criteriaList);
+        return buildGlue(glueOperationProvider, criteriaList, glue);
     }
 
     @Override
@@ -66,7 +71,7 @@ public class CriteriaOperationService implements OperationService<Criteria> {
                                 complexSearchParam.getInternalGlue()
                         ))
                 .collect(Collectors.toList());
-        return externalGlue.glueCriteriaOperation(criteriaList);
+        return buildGlue(glueOperationProvider, criteriaList, externalGlue);
     }
 
     /**
